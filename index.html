@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoStats | Painel Global</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <script src="https://unpkg.com/globe.gl@2.32.0/dist/globe.gl.min.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">🌍</div>
+    <h1>EcoStats</h1>
+  </div>
+  <ul class="nav-links">
+    <li class="active">Início</li>
+    <li>Sobre</li>
+    <li>Contato</li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-pill" id="btnLiveData">⬤ AO VIVO</div>
+    <div class="nav-pill" id="btnRotate">⟳ Rotação</div>
+  </div>
+</nav>
+
+<!-- Globe -->
+<div id="globeViz"></div>
+
+<!-- Hover tooltip -->
+<div id="hoverLabel"></div>
+
+<!-- Left Panel: Live Stats -->
+<div id="leftPanel">
+  <div class="lp-card">
+    <div class="lp-label">📡 Indicadores Globais</div>
+    <div class="live-stat">
+      <div class="stat-row">
+        <span class="stat-name">Países monitorados</span>
+        <span class="stat-val blue" id="statCountries">195</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Última atualização</span>
+        <span class="stat-val green" id="statTime">--:--:--</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">Pop. Mundial</span>
+        <span class="stat-val purple" id="statPop">~8.1 bi</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">PIB Mundial (est.)</span>
+        <span class="stat-val blue" id="statGdp">~$105T</span>
+      </div>
+    </div>
+  </div>
+  <div class="lp-card" id="liveRates">
+    <div class="lp-label">💱 Taxas em Tempo Real</div>
+    <div class="live-stat" id="ratesBody">
+      <div class="stat-row"><span class="stat-name">USD → BRL</span><span class="stat-val green" id="rUSDtoBRL">—</span></div>
+      <div class="stat-row"><span class="stat-name">EUR → BRL</span><span class="stat-val green" id="rEURtoBRL">—</span></div>
+      <div class="stat-row"><span class="stat-name">BTC → USD</span><span class="stat-val blue" id="rBTCtoBRL">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Country Info Box -->
+<div id="infobox">
+  <div class="info-placeholder">
+    🌐<br><br>
+    Clique em qualquer país<br>para ver dados em tempo real.
+  </div>
+</div>
+
+<!-- Top Countries Panel -->
+<div id="topPanel">
+  <div class="lp-label">🏆 Top 5 PIB Mundial</div>
+  <div id="topBody">
+    <div class="stat-row"><span class="stat-name" style="color:var(--muted)">Carregando</span></div>
+  </div>
+</div>
+
+<!-- Bottom Bar -->
+<div id="bottomBar">
+  <button class="bar-btn active" onclick="setView('globe')"><span class="icon">🌍</span> Globo</button>
+  <button class="bar-btn" onclick="toggleConverter()"><span class="icon">💱</span> Conversor</button>
+  <button class="bar-btn" onclick="toggleTop()"><span class="icon">🏆</span> Top PIB</button>
+  <button class="bar-btn" onclick="toggleCompare()"><span class="icon">⚖️</span> Comparar</button>
+</div>
+
+<!-- Currency Converter -->
+<div id="converterPanel">
+  <div class="conv-title">💱 Conversor de Moedas · Tempo Real</div>
+  <div class="conv-row">
+    <input class="conv-input" type="number" id="convAmount" value="1" min="0" step="any">
+    <select class="conv-select" id="convFrom"></select>
+    <span class="conv-arrow" onclick="swapCurrencies()">⇄</span>
+    <select class="conv-select" id="convTo"></select>
+  </div>
+  <div class="conv-result" id="convResult">—</div>
+  <div class="conv-note" id="convNote">Taxas atualizadas via API pública em tempo real.</div>
+</div>
+
+<!-- COMPARE MODAL -->
+<div id="compareModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:300; background:rgba(12,17,32,0.97); border:1px solid var(--border); border-radius:18px; padding:28px; width:600px; max-width:95vw; backdrop-filter:blur(20px);">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+    <span style="font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; color:var(--accent);">⚖️ Comparar Países</span>
+    <span style="cursor:pointer; color:var(--muted); font-size:1.2rem;" onclick="toggleCompare()">✕</span>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+    <div>
+      <div class="lp-label">País A</div>
+      <input id="cmpA" class="conv-input" style="width:100%; margin-bottom:8px;" placeholder="Ex: Brazil">
+      <button onclick="loadCompare('A')" class="bar-btn active" style="width:100%; justify-content:center; border-radius:10px;">Buscar</button>
+      <div id="cmpAResult" style="margin-top:10px; font-size:0.75rem; color:var(--text); line-height:1.9;"></div>
+    </div>
+    <div>
+      <div class="lp-label">País B</div>
+      <input id="cmpB" class="conv-input" style="width:100%; margin-bottom:8px;" placeholder="Ex: United States">
+      <button onclick="loadCompare('B')" class="bar-btn active" style="width:100%; justify-content:center; border-radius:10px;">Buscar</button>
+      <div id="cmpBResult" style="margin-top:10px; font-size:0.75rem; color:var(--text); line-height:1.9;"></div>
+    </div>
+  </div>
+</div>
+<div id="compareOverlay" onclick="toggleCompare()" style="display:none; position:fixed; inset:0; z-index:299; background:rgba(0,0,0,0.5);"></div>
+<script src="js/globe.js"></script>
+<script src="js/country.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/functions.js"></script>
+<script src="js/liverates.js"></script>
+</body>
+</html>
