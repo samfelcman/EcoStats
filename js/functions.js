@@ -1,3 +1,14 @@
+function escapeHtml(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;"
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    )
+}
+
 let converterOpen = false;
 function toggleConverter() {
   converterOpen = !converterOpen;
@@ -23,6 +34,38 @@ function setView(v) {
   document.querySelectorAll('.bar-btn').forEach(b => b.classList.remove('active'));
   event.target.closest('.bar-btn').classList.add('active');
 }
+
+// NAV(Inicio, Sobre, Contato)
+function setNav(view, li) {
+  document.querySelectorAll('.nav-links li').forEach(b => b.classList.remove('active'));
+  if (li) li.classList.add('active');
+
+  const about = document.getElementeById('aboutPanel');
+  const contact = document.getElementeById('contactPanel');
+
+  about.classList.toggle('open', view === 'about');
+  contact.classList.toggle('open', view === 'contact');
+
+  //Fecha painéis flutuantes do globo para não sobrepor a nova aba
+  if (view !== 'home') {
+    converterOpen = false;
+    topOpen = false;
+    compareOpen = false;
+    document.getElementById('converterPanel').classList.remove('open');
+    document.getElementById('bottomBar').classList.remove('hidden');
+    document.getElementById('topPanel').classList.remove('open');
+    document.getElementById('compareModal').style.display = 'none';
+    document.getElementById('compareOverlay').style.display = 'none';
+  }
+}
+
+// Fecha as abas Sobre/Contato com a tecla Esc, por conveniência
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const homeLi = document.querySelector('.nav-links li[data-view="home"]');
+    setNav('home', homeLi);
+  }
+});
 
 // ─── TOP COUNTRIES ────────────────────────────────────────────────────────────
 const TOP_GDP = [
@@ -81,3 +124,15 @@ async function loadCompare(side) {
     result.innerHTML = '<span style="color:var(--danger);">País não encontrado.</span>';
   }
 }
+
+// Enter para buscar, sem precisar clicar no botão
+document.addEventListener('DOMContentLoaded', () => {
+  ['A', 'B'].forEach(side => {
+    const input = document.getElementById(`cmp${side}`);
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') loadCompare(side);
+      });
+    }
+  });
+});

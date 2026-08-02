@@ -8,3 +8,7 @@ document.getElementById('btnLiveData').addEventListener('click', () => {
   fetchLiveRates();
   loadTopCountries();
 });
+
+document.querySelectorAll('.nav-links li').forEach(li => {
+  li.addEventListener('click', () => setNav(li.dataset.view, li));
+})
