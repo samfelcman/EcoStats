@@ -3,6 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- CMetricas de Segurança: coloquei para restringir de onde o sites podem carregar scripts/estilos e para
+       onde pode enviar as requisições, reduzindo o risco de scripts maliciosos
+       injetados ou de vazamento de dados para domínios desconhecidos. -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://unpkg.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src https://fonts.gstatic.com;
+    img-src 'self' https: data:;
+    connect-src 'self' https://restcountries.com https://api.worldbank.org https://open.er-api.com https://api.coingecko.com https://unpkg.com;
+  ">
   <title>EcoStats | Painel Global</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -19,9 +30,9 @@
     <h1>EcoStats</h1>
   </div>
   <ul class="nav-links">
-    <li class="active">Início</li>
-    <li>Sobre</li>
-    <li>Contato</li>
+    <li class="active" data-view="home">Início</li>
+    <li data-view="about">Sobre</li>
+    <li data-view="contact">Contato</li>
   </ul>
   <div class="nav-right">
     <div class="nav-pill" id="btnLiveData">⬤ AO VIVO</div>
@@ -127,6 +138,80 @@
   </div>
 </div>
 <div id="compareOverlay" onclick="toggleCompare()" style="display:none; position:fixed; inset:0; z-index:299; background:rgba(0,0,0,0.5);"></div>
+
+<!-- ABA SOBRE -->
+<div id="aboutPanel" class="page-panel">
+  <div class="page-panel-inner">
+    <div class="page-eyebrow">🌍 O projeto</div>
+    <h2 class="page-title">Sobre o EcoStats</h2>
+    <p class="page-text">
+      EcoStats é um painel global interativo para explorar dados de população, economia e
+      câmbio de qualquer país do mundo, direto em um globo 3D. Comece girando o globo ou
+      clicando em qualquer país para ver seus indicadores em tempo real. EcoStats será mais que um painel global, e sim uma verdadeira ferramenta de exploração de dados, com comparações, rankings e muito mais.
+    </p>
+
+    <div class="about-signature">
+      <div class="signature-item">
+        <div class="signature-num">04</div>
+        <div class="signature-label">APIs públicas conectadas</div>
+      </div>
+      <div class="signature-item">
+        <div class="signature-num">195</div>
+        <div class="signature-label">Países monitorados</div>
+      </div>
+      <div class="signature-item">
+        <div class="signature-num">100%</div>
+        <div class="signature-label">Dados em tempo real</div>
+      </div>
+    </div>
+
+    <div class="page-divider"></div>
+
+    <div class="page-subtitle">Tecnologias utilizadas</div>
+    <div class="tech-badges">
+      <span class="tech-badge">HTML5 &amp; CSS3</span>
+      <span class="tech-badge">JavaScript (Vanilla)</span>
+      <span class="tech-badge">Globe.gl / Three.js</span>
+      <span class="tech-badge">REST Countries API</span>
+      <span class="tech-badge">World Bank API</span>
+      <span class="tech-badge">ExchangeRate API</span>
+      <span class="tech-badge">CoinGecko API</span>
+    </div>
+
+    <div class="page-divider"></div>
+
+    <p class="page-text muted">
+      Projeto pessoal em constante evolução — feito para aprender enquanto se constrói algo
+      um pouco mais ambicioso. Sugestões e melhorias são sempre bem-vindas.
+    </p>
+
+    <button class="page-back-btn" onclick="setNav('home', document.querySelector('.nav-links li[data-view=home]'))">← Voltar ao globo</button>
+  </div>
+</div>
+
+<!-- ABA CONTATO -->
+<div id="contactPanel" class="page-panel">
+  <div class="page-panel-inner">
+    <div class="page-eyebrow">✉️ Fale comigo</div>
+    <h2 class="page-title">Contato</h2>
+    <p class="page-text">
+      Encontrou um bug, tem uma sugestão ou só quer trocar uma ideia sobre o projeto?
+      Fico feliz em ouvir.
+    </p>
+
+    <div class="contact-card">
+      <a class="contact-link" href="mailto:samuelfelcman17@gmail.com" target="_blank" rel="noopener noreferrer">
+        <span class="contact-icon">📧</span> samuelfelcman17@gmail.com
+      </a>
+      <a class="contact-link" href="https://github.com/samfelcman" target="_blank" rel="noopener noreferrer">
+        <span class="contact-icon">💻</span> github.com/samfelcman
+      </a>
+    </div>
+
+    <button class="page-back-btn" onclick="setNav('home', document.querySelector('.nav-links li[data-view=home]'))">← Voltar ao globo</button>
+  </div>
+</div>
+
 <script src="js/globe.js"></script>
 <script src="js/country.js"></script>
 <script src="js/nav.js"></script>
