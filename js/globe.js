@@ -71,6 +71,6 @@ fetch('https://unpkg.com/world-atlas/countries-110m.json')
         );
 
       });
-      // Fly to point of view (Go to the country you click on)
-world.pointOfView({ lat: 10, lng: 0, altitude: 1.8 });
   })
+  // Fly to point of view (Go to the country you click on)
+world.pointOfView({ lat: 10, lng: 0, altitude: 1.8 });
