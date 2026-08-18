@@ -24,7 +24,6 @@ fetch('https://unpkg.com/world-atlas/countries-110m.json')
   .then(r => r.json())
   .then(data => {
     const countries = topojson.feature(data, data.objects.countries).features;
-
     world
       .polygonsData(countries)
       .polygonAltitude(0.01)
@@ -36,16 +35,42 @@ fetch('https://unpkg.com/world-atlas/countries-110m.json')
         currentHover = d;
         world.polygonCapColor(p => p === d ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.09)');
         world.polygonAltitude(p => p === d ? 0.025 : 0.01);
-      })
-      .onPolygonClick(async d => {
-        const name = d?.properties?.name;
-        if (!name) return;
-        controls.autoRotate = false;
-        autoRotating = false;
-        document.getElementById('btnRotate').classList.remove('active');
-        await loadCountryInfo(name);
+        
+      .onPolygonClick(async polygon => {
+        console.log("País clicado:", polygon);
+        const properties = polygon.properties || {};
+
+        const isoCode = 
+          properties.ISO_A3 ||
+          properties.ISO3 ||
+          properties.ADM0_A3 ||
+          properties.iso_a3 ||
+          properties.ISO_A3_EH;
+
+        const countryName =
+          properties.ADMIN ||
+          properties.NAME ||
+          properties.name ||
+          properties.NAME_EN;
+
+        console.log("Nome:", countryName);
+        console.log("ISO:", isoCode);
+
+        if (!isoCode || isocode === "-99") {
+          console.error(
+            "Não foi possivel encontrar a ISO do país:",
+            properties
+          );
+
+          return;
+        }
+
+        await loadCountryInfo(
+          isoCode,
+          countryName
+        );
+
       });
-  });
 
 // Fly to point of view (Go to the country you click on)
-world.pointOfView({ lat: 10, lng: 0, altitude: 2.4 });
+world.pointOfView({ lat: 10, lng: 0, altitude: 1.8 });

@@ -6,15 +6,6 @@
   <!-- CMetricas de Segurança: coloquei para restringir de onde o sites podem carregar scripts/estilos e para
        onde pode enviar as requisições, reduzindo o risco de scripts maliciosos
        injetados ou de vazamento de dados para domínios desconhecidos. -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com; data:;
-    img-src 'self' data: blob: https:;
-    connect-src 'self' https://api.restcountries.com https://restcountries.com https://api.worldbank.org https://open.er-api.com https://api.coingecko.com https://unpkg.com;
-    worker-src 'self' blob:;
-    child-src 'self' blob:;
   ">
   <title>EcoStats | Painel Global</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
