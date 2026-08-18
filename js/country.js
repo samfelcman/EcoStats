@@ -1,4 +1,4 @@
-const REST_COUNTRIES_API_KEY = 'rc_live_demo';
+const REST_COUNTRIES_API_KEY = 'rc_live_0af719938f2e416da02bc836c52573f3';
 async function loadCountryInfo(countryName) {
 
     const box = document.getElementById('infobox');
