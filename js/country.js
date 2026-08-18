@@ -37,39 +37,11 @@ async function loadCountryInfo(countryName) {
         console.log('Consultando REST Countries:', countryUrl);
 
 
-        const response = await fetch(countryUrl);
-
-
-        // ----------------------------------------------------
-        // VERIFICAR RESPOSTA
-        // ----------------------------------------------------
-
-        if (!response.ok) {
-
-            let apiMessage = '';
-
-            try {
-
-                const errorBody = await response.json();
-
-                apiMessage =
-                    errorBody?.errors?.[0]?.message || '';
-
-            } catch (error) {
-                // Ignora erro ao tentar ler resposta de erro
-            }
-
-
-            throw new Error(
-                `REST Countries HTTP ${response.status}` +
-                (
-                    apiMessage
-                        ? `: ${apiMessage}`
-                        : ''
-                )
-            );
-
-        }
+        const response = await fetch(countryUrl, {
+          headers: {
+            Authorization: `Bearer ${REST_COUNTRIES_API_KEY}`
+    }
+});
 
 
         // ----------------------------------------------------
@@ -77,101 +49,71 @@ async function loadCountryInfo(countryName) {
         // ----------------------------------------------------
 
         const result = await response.json();
-
-
         console.log(
             'Resposta REST Countries:',
             result
         );
-
-
         // REST Countries V5
         // Estrutura esperada:
         //
         // data
         //   └── objects
         //          └── país
-
         const country =
             result?.data?.objects?.[0];
 
-
         if (!country) {
-
             throw new Error(
                 `País "${countryName}" não encontrado.`
             );
-
         }
-
-
         // ====================================================
         // DADOS DO PAÍS
         // ====================================================
-
-
         // ----------------------------------------------------
         // NOME
         // ----------------------------------------------------
-
         const name =
             country.names?.common ||
             countryName;
-
-
         // ----------------------------------------------------
         // POPULAÇÃO
         // ----------------------------------------------------
-
         const population =
             country.population
                 ? Number(
                     country.population
                   ).toLocaleString('pt-BR')
                 : 'N/A';
-
-
         // ----------------------------------------------------
         // ÁREA
         // ----------------------------------------------------
-
         const area =
             country.area
                 ? Number(
                     country.area
                   ).toLocaleString('pt-BR') + ' km²'
                 : 'N/A';
-
-
         // ----------------------------------------------------
         // CAPITAL
         // ----------------------------------------------------
-
         const capital =
             country.capitals?.[0] ||
             'N/A';
-
-
         // ----------------------------------------------------
         // REGIÃO
         // ----------------------------------------------------
-
         const region =
             country.subregion ||
             country.region ||
             'N/A';
-
-
         // ----------------------------------------------------
         // IDIOMA
         // ----------------------------------------------------
-
         const languageValues =
             Object.values(
                 country.languages || {}
             );
-
-
         const language =
             languageValues.length > 0
                 ? (
@@ -179,125 +121,89 @@ async function loadCountryInfo(countryName) {
                     languageValues[0]
                   )
                 : 'N/A';
-
-
         // ----------------------------------------------------
         // MOEDA
         // ----------------------------------------------------
-
         const currencyValues =
             Object.values(
                 country.currencies || {}
             );
 
-
         const currencyObject =
             currencyValues[0] || {};
-
 
         const currency =
             currencyObject.name ||
             'N/A';
 
-
         const currencySymbol =
             currencyObject.symbol ||
             '';
-
-
         // ----------------------------------------------------
         // BANDEIRA
         // ----------------------------------------------------
-
         const flag =
             country.flag?.emoji ||
             country.flag ||
             '🌍';
-
-
         // ----------------------------------------------------
         // GINI
         // ----------------------------------------------------
-
         const giniValues =
             country.gini
                 ? Object.values(country.gini)
                 : [];
 
-
         const gini =
             giniValues.length > 0
                 ? `${giniValues[0]}%`
                 : 'N/A';
-
-
         // ----------------------------------------------------
         // TRÂNSITO
         // ----------------------------------------------------
-
         const drivingSide =
             country.car?.side ||
             'N/A';
-
-
         // ----------------------------------------------------
         // DOMÍNIO
         // ----------------------------------------------------
-
         const domain =
             country.tld?.[0] ||
             'N/A';
-
-
         // ----------------------------------------------------
         // COORDENADAS
         // ----------------------------------------------------
-
         const latitude =
             country.latlng?.[0];
 
         const longitude =
             country.latlng?.[1];
-
-
         // ====================================================
         // ISO ALPHA 3
         // ====================================================
-
         const isoCode =
             country.codes?.alpha_3 ||
             country.cca3 ||
             null;
 
-
         console.log(
             'ISO Alpha-3:',
             isoCode
         );
-
-
         // ====================================================
         // WORLD BANK
         // ====================================================
-
         let gdp = 'N/A';
-
         let gdpPerCapita = 'N/A';
-
         let gdpYear = '';
 
-
         if (isoCode) {
-
             try {
-
                 const gdpUrl =
                     `https://api.worldbank.org/v2/country/${encodeURIComponent(isoCode)}/indicator/NY.GDP.MKTP.CD?format=json&mrnev=1`;
 
-
                 const gdpPerCapitaUrl =
                     `https://api.worldbank.org/v2/country/${encodeURIComponent(isoCode)}/indicator/NY.GDP.PCAP.CD?format=json&mrnev=1`;
-
 
                 const [
                     gdpResponse,
@@ -307,9 +213,7 @@ async function loadCountryInfo(countryName) {
                     fetch(gdpUrl),
 
                     fetch(gdpPerCapitaUrl)
-
                 ]);
-
 
                 if (
                     !gdpResponse.ok ||
@@ -319,9 +223,7 @@ async function loadCountryInfo(countryName) {
                     throw new Error(
                         `World Bank HTTP ${gdpResponse.status}/${gdpPerCapitaResponse.status}`
                     );
-
                 }
-
 
                 const [
                     gdpData,
@@ -331,14 +233,10 @@ async function loadCountryInfo(countryName) {
                     gdpResponse.json(),
 
                     gdpPerCapitaResponse.json()
-
                 ]);
-
-
                 // ------------------------------------------------
                 // PIB
                 // ------------------------------------------------
-
                 const gdpRecord =
                     Array.isArray(gdpData?.[1])
                         ? gdpData[1].find(
@@ -347,12 +245,9 @@ async function loadCountryInfo(countryName) {
                                 item?.value !== undefined
                           )
                         : null;
-
-
                 // ------------------------------------------------
                 // PIB PER CAPITA
                 // ------------------------------------------------
-
                 const gdpPerCapitaRecord =
                     Array.isArray(
                         gdpPerCapitaData?.[1]
@@ -363,23 +258,17 @@ async function loadCountryInfo(countryName) {
                                 item?.value !== undefined
                           )
                         : null;
-
-
                 // ------------------------------------------------
                 // FORMATAR PIB
                 // ------------------------------------------------
-
                 if (gdpRecord) {
-
                     const value =
                         Number(
                             gdpRecord.value
                         );
 
-
                     gdpYear =
                         gdpRecord.date || '';
-
 
                     if (value >= 1e12) {
 
@@ -387,16 +276,13 @@ async function loadCountryInfo(countryName) {
                             `$${(
                                 value / 1e12
                             ).toFixed(2)} trilhões`;
-
                     }
 
                     else if (value >= 1e9) {
-
                         gdp =
                             `$${(
                                 value / 1e9
                             ).toFixed(2)} bilhões`;
-
                     }
 
                     else if (value >= 1e6) {
