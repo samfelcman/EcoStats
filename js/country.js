@@ -1,4 +1,4 @@
-const REST_COUNTRIES_API_KEY = 'samfelcman.github.io';
+const REST_COUNTRIES_API_KEY = 'rc_live_demo';
 async function loadCountryInfo(countryName) {
 
     const box = document.getElementById('infobox');
@@ -625,7 +625,7 @@ async function loadCountryInfo(countryName) {
                     <div class="info-metric-label">
                         📈 Gini
                     </div>
-                        
+
                     <div class="info-metric-val purple">
                         ${escapeHtml(gini)}
                     </div>
