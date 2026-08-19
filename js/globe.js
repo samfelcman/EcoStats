@@ -39,11 +39,20 @@ fetch('https://unpkg.com/world-atlas/countries-110m.json')
       })
       .onPolygonClick(async d => {
         const name = d?.properties?.name;
+        
         if (!name) return;
+
+        console.log("País clicado:", name);
         controls.autoRotate = false;
         autoRotating = false;
-        document.getElementById('btnRotate').classList.remove('active');
-        await loadCountryInfo(name);
+
+        const btnRotate = document.getElementById('btnRotate');
+
+        if (btnRotate) {
+          btnRotate.classList.remove('active');
+        }
+
+        await loadCountryInfo('BRA', name)
       });
   });
 

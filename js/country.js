@@ -47,8 +47,6 @@ async function loadCountryInfo(isoCode, countryName) {
       );
     }
 
-    const result = await response.json();
-
     console.log(
       "Reposta REST Countries:",
       result
@@ -67,31 +65,7 @@ async function loadCountryInfo(isoCode, countryName) {
       "País encontrado:",
       country
     );
-
-
-    // ----------------------------------------------------
-    // JSON
-    // ----------------------------------------------------
-
-    const result = await response.json();
-    console.log(
-      'Resposta REST Countries:',
-      result
-    );
-    // REST Countries V5
-    // Estrutura esperada:
-    //
-    // data
-    //   └── objects
-    //          └── país
-    const country =
-      result?.data?.objects?.[0];
-
-    if (!country) {
-      throw new Error(
-        `País "${countryName}" não encontrado.`
-      );
-    }
+    
     // ====================================================
     // DADOS DO PAÍS
     // ====================================================
