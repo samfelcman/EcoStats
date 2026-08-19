@@ -21,62 +21,132 @@ window.addEventListener('resize', () => {
 
 // Polygon data
 fetch('https://unpkg.com/world-atlas/countries-110m.json')
-  .then(r => r.json())
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`Erro ao carregar países: ${response.status}`);
+    }
+    return response.json();
+  })
   .then(data => {
-    console.log('World Atlas carregada:', data);
-    const countries = topojson.feature(data, data.objects.countries).features;
-
+    console.log('World Atlas carregado');
+    const countries = topojson.feature(
+      data,
+      data.objects.countries
+    ).features;
     console.log(
-      'Países carregados:',
+      'Quantidade de países:',
       countries.length
     );
 
     world
-    .polygonsData(countries)
-    .polygonsAltitude(0.01)
-    .polygonCapColor(d => d === currentHover ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.09)')
-    .polygonSideColor(() => 'rgba(14,165,233,0.12)')
-    .polygonStrokeColor(() => 'rgba(99,179,237,0.3)')
-    .polygonLabel(d => `<div style="font-family:'DM Mono',monospace; font-size:11px; background:rgba(12,17,32,0.9); border:1px solid rgba(99,179,237,0.2); border-radius:6px; padding:5px 10px; color:#e2e8f0;">${d.properties.name || '—'}</div>`)
-    .onPolygonHover(d => {
-      currentHover = d;
-      world.polygonCapColor(p => p === d ? 'rgba(56,189,248,0.35)' : 'rgba(255,255,255,0.09)');
-      world.polygonAltitude(p => p === d ? 0.025 : 0.01);
-    })
-    .onPolygonClick(async polygon => {
-        console.log("País clicado:", polygon);
-        const properties = polygon.properties || {};
-
-        const isocode = 
-          properties.ISO_A3 ||
-          properties.ISO3 ||
-          properties.ADM0_A3 ||
-          properties.iso_a3 ||
-          properties.ISO_A3_EH;
-
+      .polygonsData(countries)
+      // Altura normal dos países
+      .polygonAltitude(0.006)
+      // Cor dos países
+      .polygonCapColor(d => {
+        if (d === currentHover) {
+          return '#38bdf8';
+        }
+        return 'rgba(255,255,255,0.08)';
+      })
+      // Laterais
+      .polygonSideColor(() => {
+        return 'rgba(14,165,233,0.12)';
+      })
+      // Bordas
+      .polygonStrokeColor(() => {
+        return 'rgba(99,179,237,0.35)';
+      })
+      // Tooltip
+      .polygonLabel(d => {
+        const name =
+          d.properties?.name || 'País';
+        return `
+          <div style="
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            background: rgba(12,17,32,0.95);
+            border: 1px solid rgba(99,179,237,0.3);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: #e2e8f0;
+          ">
+            ${name}
+          </div>
+        `;
+      })
+      .onPolygonHover(d => {
+        currentHover = d;
+        world
+          .polygonCapColor(country => {
+            if (country === d) {
+              return '#38bdf8';
+            }
+            return 'rgba(255,255,255,0.08)';
+          })
+          .polygonAltitude(country => {
+            if (country === d) {
+              return 0.02;
+            }
+            return 0.006;
+          });
+      })
+      // Clique
+      .onPolygonClick(async polygon => {
+        console.log(
+          'País clicado:',
+          polygon
+        );
+        const properties =
+          polygon.properties || {};
+        console.log(
+          'Properties:',
+          properties
+        );
         const countryName =
-          properties.ADMIN ||
-          properties.NAME ||
           properties.name ||
-          properties.NAME_EN;
+          properties.NAME ||
+          properties.ADMIN ||
+          'País desconhecido';
 
-        console.log("Nome:", countryName);
-        console.log("ISO:", isoCode);
-
-        if (!isoCode || isocode === "-99") {
+        console.log(
+          'Nome:',
+          countryName
+        );
+        // Aqui vamos resolver o ISO
+        // posteriormente.
+        //
+        // Por enquanto apenas verificamos
+        // se o país foi identificado.
+        if (!countryName) {
           console.error(
-            "Não foi possivel encontrar a ISO do país:",
-            properties
+            'Não foi possível identificar o país.'
           );
-
           return;
         }
-
-        await loadCountryInfo(
-          isoCode,
+        /*
+         * IMPORTANTE:
+         *
+         * Não chame REST Countries aqui ainda
+         * se o ISO estiver undefined.
+         *
+         * Primeiro vamos confirmar o mapa.
+         */
+        console.log(
+          'Pronto para carregar dados de:',
           countryName
         );
       });
+    // Posição inicial
+    world.pointOfView({
+      lat: 10,
+      lng: 0,
+      altitude: 1.8
+    });
   })
-  // Fly to point of view (Go to the country you click on)
-world.pointOfView({ lat: 10, lng: 0, altitude: 1.8 });
+  .catch(error => {
+    console.error(
+      'Erro ao carregar World Atlas:',
+      error
+    );
+  });
