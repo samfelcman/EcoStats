@@ -1,12 +1,24 @@
-// ============================================================
-// PAINEL DE INFORMAÇÕES DO PAÍS
-// ============================================================
-// Fonte de dados: REST Countries v3.1 (pública, sem necessidade
-// de API key) + World Bank API para indicadores econômicos.
-// ============================================================
-
-const REST_COUNTRIES_BASE_URL = 'rc_live_52df4e65d2cc49b1a9fc427db434210a';
+const REST_COUNTRIES_API_KEY = 'rc_live_52df4e65d2cc49b1a9fc427db434210a';
+const REST_COUNTRIES_BASE_URL = 'https://api.restcountries.com/countries/v5';
 const WORLD_BANK_BASE_URL = 'https://api.worldbank.org/v2/country';
+
+const COUNTRY_RESPONSE_FIELDS = [
+  'names.common',
+  'population',
+  'area.kilometers',
+  'capitals',
+  'region',
+  'subregion',
+  'languages',
+  'currencies',
+  'flag.emoji',
+  'economy.gini_coefficient',
+  'cars.driving_side',
+  'tlds',
+  'coordinates.lat',
+  'coordinates.lng',
+  'codes.alpha_3',
+].join(',');
 
 async function loadCountryInfo(countryName) {
   const box = document.getElementById('infobox');
@@ -38,72 +50,116 @@ async function loadCountryInfo(countryName) {
 }
 
 // ============================================================
-// BUSCA NA REST COUNTRIES
+// BUSCA NA REST COUNTRIES (v5)
 // ============================================================
-async function fetchCountry(countryName) {
-  const fields = [
-    'name', 'population', 'area', 'capital', 'region', 'subregion',
-    'languages', 'currencies', 'flag', 'gini', 'car', 'tld', 'latlng', 'cca3',
-  ].join(',');
+async function restCountriesGet(path) {
+  const url = `${REST_COUNTRIES_BASE_URL}${path}`;
+  let response;
 
-  const url = `${REST_COUNTRIES_BASE_URL}/name/${encodeURIComponent(countryName)}?fields=${fields}`;
+  try {
+    response = await fetch(url, {
+      headers: { Authorization: `Bearer ${REST_COUNTRIES_API_KEY}` },
+    });
+  } catch (networkError) {
+    // Geralmente cai aqui quando o hostname não está liberado
+    // nas origens da API key (bloqueio de CORS).
+    throw new Error(
+      'Falha de rede/CORS ao acessar a REST Countries. Verifique se o hostname deste site está liberado nas origens da sua API key em restcountries.com/api-keys.'
+    );
+  }
 
-  const response = await fetch(url);
-
+  if (response.status === 401) {
+    throw new Error('API key da REST Countries ausente ou inválida.');
+  }
+  if (response.status === 403) {
+    throw new Error('Cota da REST Countries excedida ou campo bloqueado no plano atual.');
+  }
+  if (response.status === 429) {
+    throw new Error('Muitas requisições à REST Countries em pouco tempo. Tente novamente em instantes.');
+  }
   if (!response.ok) {
     throw new Error(`REST Countries HTTP ${response.status}`);
   }
 
-  const results = await response.json();
-  const country = Array.isArray(results) ? results[0] : null;
+  return response.json();
+}
 
-  if (!country) {
+async function fetchCountry(countryName) {
+  const encodedName = encodeURIComponent(countryName);
+
+  // 1) Tenta correspondência exata pelo nome comum (case-insensitive)
+  try {
+    const exact = await restCountriesGet(
+      `/names.common/${encodedName}?response_fields=${COUNTRY_RESPONSE_FIELDS}`
+    );
+    const match = exact?.data?.objects?.[0];
+    if (match) return match;
+  } catch (exactError) {
+    // Se não for erro de "não encontrado", propaga (ex: 401, CORS, 429...)
+    if (!/HTTP 404/.test(exactError.message)) throw exactError;
+  }
+
+  // 2) Fallback: busca por aproximação (nomes do globo às vezes
+  // diferem do nome oficial, ex: "United States of America")
+  const search = await restCountriesGet(
+    `/name?q=${encodedName}&limit=5&response_fields=${COUNTRY_RESPONSE_FIELDS}`
+  );
+  const candidates = search?.data?.objects || [];
+
+  if (candidates.length === 0) {
     throw new Error(`País "${countryName}" não encontrado.`);
   }
 
-  return country;
+  const normalized = countryName.trim().toLowerCase();
+  const bestMatch =
+    candidates.find(c => c.names?.common?.toLowerCase() === normalized) ||
+    candidates.find(c => normalized.includes(c.names?.common?.toLowerCase() || '\u0000')) ||
+    candidates[0];
+
+  return bestMatch;
 }
 
 // ============================================================
 // NORMALIZA OS CAMPOS RETORNADOS PELA API
 // ============================================================
 function extractCountryInfo(country, fallbackName) {
-  const name = country.name?.common || fallbackName;
+  const name = country.names?.common || fallbackName;
 
   const population = country.population
     ? Number(country.population).toLocaleString('pt-BR')
     : 'N/A';
 
-  const area = country.area
-    ? `${Number(country.area).toLocaleString('pt-BR')} km²`
+  const area = country.area?.kilometers
+    ? `${Number(country.area.kilometers).toLocaleString('pt-BR')} km²`
     : 'N/A';
 
-  const capital = country.capital?.[0] || 'N/A';
+  const capital = country.capitals?.[0]?.name || 'N/A';
   const region = country.subregion || country.region || 'N/A';
 
-  const languageValues = Object.values(country.languages || {});
-  const language = languageValues.length > 0 ? languageValues[0] : 'N/A';
+  const languageValues = Array.isArray(country.languages) ? country.languages : [];
+  const language = languageValues.length > 0 ? (languageValues[0]?.name || 'N/A') : 'N/A';
 
   const currencyValues = Object.values(country.currencies || {});
   const currencyObject = currencyValues[0] || {};
   const currency = currencyObject.name || 'N/A';
   const currencySymbol = currencyObject.symbol || '';
 
-  const flag = country.flag || '🌍';
+  const flag = country.flag?.emoji || '🌍';
 
-  // gini vem como { "2019": 53.4, ... } — pega o valor mais recente
-  const giniYears = Object.keys(country.gini || {}).sort().reverse();
-  const gini = giniYears.length > 0
-    ? `${country.gini[giniYears[0]]}%`
-    : 'N/A';
+  // gini_coefficient vem como { "2019": 53.4, ... } — pega o ano mais recente
+  const giniData = country.economy?.gini_coefficient || {};
+  const giniYears = Object.keys(giniData).sort().reverse();
+  const gini = giniYears.length > 0 ? `${giniData[giniYears[0]]}%` : 'N/A';
 
-  const drivingSide = country.car?.side || 'N/A';
-  const domain = country.tld?.[0] || 'N/A';
+  const drivingSideRaw = country.cars?.driving_side;
+  const drivingSide = drivingSideRaw === 'left' ? 'Esquerda' : drivingSideRaw === 'right' ? 'Direita' : 'N/A';
 
-  const latitude = country.latlng?.[0];
-  const longitude = country.latlng?.[1];
+  const domain = country.tlds?.[0] || 'N/A';
 
-  const isoCode = country.cca3 || null;
+  const latitude = country.coordinates?.lat;
+  const longitude = country.coordinates?.lng;
+
+  const isoCode = country.codes?.alpha_3 || null;
 
   return {
     name, population, area, capital, region, language,

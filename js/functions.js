@@ -93,43 +93,55 @@ function loadTopCountries() {
 }
 
 // ─── COMPARE ─────────────────────────────────────────────────────────────────
+// Reaproveita a mesma API (v5) e a mesma chave configuradas em country.js.
+const COMPARE_RESPONSE_FIELDS = [
+  'names.common', 'population', 'capitals', 'area.kilometers',
+  'languages', 'flag.emoji', 'codes.alpha_3',
+].join(',');
+
 async function loadCompare(side) {
   const input = document.getElementById(`cmp${side}`).value.trim();
   const result = document.getElementById(`cmp${side}Result`);
   if (!input) return;
   result.innerHTML = '<span class="spinner"></span>';
+
   try {
-    const res = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(input)}`);
-    if (!res.ok) throw new Error('not found');
-    const data = await res.json();
-    const c = data[0];
-    const pop = c.population ? c.population.toLocaleString('pt-BR') : 'N/A';
-    const cap = c.capital?.[0] || 'N/A';
-    const area = c.area ? c.area.toLocaleString('pt-BR') + ' km²' : 'N/A';
-    const lang = Object.values(c.languages||{})[0] || 'N/A';
-    const flag = c.flag || '🏳️';
+    const c = await fetchCountry(input);
+
+    const pop = c.population ? Number(c.population).toLocaleString('pt-BR') : 'N/A';
+    const cap = c.capitals?.[0]?.name || 'N/A';
+    const area = c.area?.kilometers ? `${Number(c.area.kilometers).toLocaleString('pt-BR')} km²` : 'N/A';
+    const lang = Array.isArray(c.languages) && c.languages.length > 0 ? c.languages[0].name : 'N/A';
+    const flag = c.flag?.emoji || '🏳️';
+    const isoCode = c.codes?.alpha_3 || null;
+
     let gdp = 'N/A';
-    try {
-      const gr = await fetch(`https://api.worldbank.org/v2/country/${c.cca3}/indicator/NY.GDP.MKTP.CD?format=json&mrv=1`);
-      const gd = await gr.json();
-      if (gd[1]?.[0]?.value) {
-        const v = gd[1][0].value;
-        gdp = v >= 1e12 ? `$${(v/1e12).toFixed(2)}T` : `$${(v/1e9).toFixed(1)}B`;
-      }
-    } catch {}
+    if (isoCode) {
+      try {
+        const gr = await fetch(`https://api.worldbank.org/v2/country/${isoCode}/indicator/NY.GDP.MKTP.CD?format=json&mrv=1`);
+        const gd = await gr.json();
+        if (gd[1]?.[0]?.value) {
+          const v = gd[1][0].value;
+          gdp = v >= 1e12 ? `$${(v/1e12).toFixed(2)}T` : `$${(v/1e9).toFixed(1)}B`;
+        }
+      } catch {}
+    }
+
     // Todos os campos vindos da API são escapados antes de entrar no innerHTML
     result.innerHTML = `
-      <div style="font-size:1.5rem; margin-bottom:4px;">${escapeHtml(flag)} ${escapeHtml(c.name.common)}</div>
+      <div style="font-size:1.5rem; margin-bottom:4px;">${escapeHtml(flag)} ${escapeHtml(c.names?.common || input)}</div>
       👥 Pop: <strong>${escapeHtml(pop)}</strong><br>
       🏙️ Capital: <strong>${escapeHtml(cap)}</strong><br>
       📐 Área: <strong>${escapeHtml(area)}</strong><br>
       🗣️ Idioma: <strong>${escapeHtml(lang)}</strong><br>
       📊 PIB: <strong style="color:var(--accent);">${escapeHtml(gdp)}</strong>
     `;
-  } catch {
-    result.innerHTML = '<span style="color:var(--danger);">País não encontrado.</span>';
+  } catch (error) {
+    console.error(`Erro ao comparar ${input}:`, error);
+    result.innerHTML = `<span style="color:var(--danger);">${escapeHtml(error.message || 'País não encontrado.')}</span>`;
   }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   ['A', 'B'].forEach(side => {
     const input = document.getElementById(`cmp${side}`);
