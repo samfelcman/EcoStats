@@ -52,7 +52,11 @@ fetch('https://unpkg.com/world-atlas/countries-110m.json')
           btnRotate.classList.remove('active');
         }
 
-        await loadCountryInfo('BRA', name)
+        try {
+          await loadCountryInfo(name);
+        } catch (error) {
+          console.error(`Erro ao carregar ${name}:`, error); 
+        }
       });
   });
 

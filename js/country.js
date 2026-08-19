@@ -1,5 +1,5 @@
 const REST_COUNTRIES_API_KEY = 'rc_live_52df4e65d2cc49b1a9fc427db434210a';
-async function loadCountryInfo(isoCode, countryName) {
+async function loadCountryInfo(countryName) {
 
   const box = document.getElementById('infobox');
 
@@ -31,7 +31,7 @@ async function loadCountryInfo(isoCode, countryName) {
     // ====================================================
 
     const countryUrl =
-      `https://api.restcountries.com/countries/v5/codes.alpha_3/${encodeURIComponent(isoCode)}`;
+      `https://api.restcountries.com/countries/v5/codes.alpha_3/${encodeURIComponent(countryName)}`;
 
     console.log('Consultando REST Countries:', countryUrl);
 
@@ -59,7 +59,7 @@ async function loadCountryInfo(isoCode, countryName) {
 
     if (!country) {
       throw new Error(
-        `Pais com ISO "${isoCode}" não encontrado.`
+        `Pais com ISO "${countryName}" não encontrado.`
       );
     }
 
@@ -182,14 +182,14 @@ async function loadCountryInfo(isoCode, countryName) {
     // ====================================================
     // ISO ALPHA 3
     // ====================================================
-    const isoCode =
+    const countryIsoCode =
       country.codes?.alpha_3 ||
       country.cca3 ||
       null;
 
     console.log(
       'ISO Alpha-3:',
-      isoCode
+      countryIsoCode
     );
     // ====================================================
     // WORLD BANK
@@ -198,13 +198,13 @@ async function loadCountryInfo(isoCode, countryName) {
     let gdpPerCapita = 'N/A';
     let gdpYear = '';
 
-    if (isoCode) {
+    if (countryIsoCode) {
       try {
         const gdpUrl =
-          `https://api.worldbank.org/v2/country/${encodeURIComponent(isoCode)}/indicator/NY.GDP.MKTP.CD?format=json&mrnev=1`;
+          `https://api.worldbank.org/v2/country/${encodeURIComponent(countryIsoCode)}/indicator/NY.GDP.MKTP.CD?format=json&mrnev=1`;
 
         const gdpPerCapitaUrl =
-          `https://api.worldbank.org/v2/country/${encodeURIComponent(isoCode)}/indicator/NY.GDP.PCAP.CD?format=json&mrnev=1`;
+          `https://api.worldbank.org/v2/country/${encodeURIComponent(countryIsoCode)}/indicator/NY.GDP.PCAP.CD?format=json&mrnev=1`;
 
         const [
           gdpResponse,
