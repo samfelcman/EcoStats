@@ -31,7 +31,7 @@ async function loadCountryInfo(countryName) {
     // ====================================================
 
     const countryUrl =
-      `https://api.restcountries.com/countries/v5/codes.alpha_3/${encodeURIComponent(countryName)}`;
+      `https://api.restcountries.com/countries/v5/names.common/${encodeURIComponent(countryName)}`;
 
     console.log('Consultando REST Countries:', countryUrl);
 
