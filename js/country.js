@@ -47,6 +47,8 @@ async function loadCountryInfo(isoCode, countryName) {
       );
     }
 
+    const result = await response.json();
+
     console.log(
       "Reposta REST Countries:",
       result
@@ -65,7 +67,7 @@ async function loadCountryInfo(isoCode, countryName) {
       "País encontrado:",
       country
     );
-    
+
     // ====================================================
     // DADOS DO PAÍS
     // ====================================================
