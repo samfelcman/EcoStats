@@ -1,5 +1,5 @@
 fetch(
-  'https://api.restcountries.com/countries/v5?',
+  'https://api.restcountries.com/countries/v5?q=canada',
   { headers: { 'Authorization': 'Bearer rc_live_52df4e65d2cc49b1a9fc427db434210a' } }
 )
   .then(function (response) { return response.json(); })
