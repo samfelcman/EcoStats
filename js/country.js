@@ -4,8 +4,10 @@ fetch(
 )
   .then(function (response) { return response.json(); })
   .then(function (data) { console.log(data); });
-  
+const REST_COUNTRIES_BASE_URL = 'https://api.restcountries.com/countries/v5';
 const WORLD_BANK_BASE_URL = 'https://api.worldbank.org/v2/country';
+
+
 const COUNTRY_RESPONSE_FIELDS = [
   'names.common',
   'population',
