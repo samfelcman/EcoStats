@@ -1,12 +1,11 @@
+const REST_COUNTRIES_BASE_URL = 'https://api.restcountries.com/countries/v5';
+const WORLD_BANK_BASE_URL = 'https://api.worldbank.org/v2/country';
 fetch(
   'https://api.restcountries.com/countries/v5?q=canada',
   { headers: { 'Authorization': 'Bearer rc_live_52df4e65d2cc49b1a9fc427db434210a' } }
 )
   .then(function (response) { return response.json(); })
   .then(function (data) { console.log(data); });
-const REST_COUNTRIES_BASE_URL = 'https://api.restcountries.com/countries/v5';
-const WORLD_BANK_BASE_URL = 'https://api.worldbank.org/v2/country';
-
 
 const COUNTRY_RESPONSE_FIELDS = [
   'names.common',
