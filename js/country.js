@@ -120,7 +120,7 @@ async function fetchCountry(countryName) {
 }
 
 // ============================================================
-// NORMALIZA OS CAMPOS RETORNADOS PELA API
+// API`s para reformular e trazer dados para a aplicação, ficarei revizando sempre.
 // ============================================================
 function extractCountryInfo(country, fallbackName) {
   const name = country.names?.common || fallbackName;
@@ -146,7 +146,7 @@ function extractCountryInfo(country, fallbackName) {
 
   const flag = country.flag?.emoji || '🌍';
 
-  // gini_coefficient vem como { "2019": 53.4, ... } — pega o ano mais recente
+  // gini_coefficient vem como { "2019": 53.4, ... } — essa parte coloquei para pegar o ano mais recente e ir atualizando conforme os dados chegam.
   const giniData = country.economy?.gini_coefficient || {};
   const giniYears = Object.keys(giniData).sort().reverse();
   const gini = giniYears.length > 0 ? `${giniData[giniYears[0]]}%` : 'N/A';
